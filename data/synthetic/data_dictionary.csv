@@ -1,0 +1,40 @@
+table_name,column_name,description
+patients,patient_id,Identifier. Synthetic.
+patients,cohort,"Which teaching cohort the person belongs to: cbp, gsd, or cms."
+patients,scenario,Named situation used to check the rules. Not a clinical field.
+patients,birth_date,"Used for age on 31 Dec 2026, and for age at inpatient start."
+patients,death_date,Death during 2026 removes the person from CBP and GSD.
+patients,clinic_id,Attributed clinic for the HEDIS clinic rates.
+patients,data_source,Always synthetic.
+enrollment_spans,span_start,"Membership start. Payer file, not the EHR."
+enrollment_spans,span_end,Membership end.
+enrollment_spans,medical_benefit,Required for the GSD payer-aligned rate.
+enrollment_spans,product_line,"commercial, medicare, or medicaid. GSD institutional exclusion requires medicare."
+enrollment_spans,isnp,Institutional special needs plan flag from the payer.
+enrollment_spans,lti,Long-term institution flag from the payer.
+encounters,encounter_class,"ambulatory, telephone, online, emergency, observation, inpatient, nonacute_inpatient, hospice, or lab."
+encounters,start_datetime,Arrival or visit start. CMS age uses the inpatient start.
+encounters,end_datetime,CMS816 includes a stay only when this timestamp falls in 2026.
+encounters,place_of_service,"81 marks a laboratory claim, which cannot identify diabetes."
+diagnoses,concept,Demonstration concept the calculator uses. This is not a HEDIS value set.
+diagnoses,code,Illustrative ICD-10 code stored beside the concept. The calculator does not read it.
+blood_pressures,systolic,Blank when the reading exists only as text.
+blood_pressures,diastolic,Blank when the reading exists only as text.
+blood_pressures,source,"office, home_digital, or home_nondigital."
+blood_pressures,setting,"outpatient, inpatient, emergency, or home."
+blood_pressures,capture,discrete or note_only.
+blood_pressures,procedure_diet_change,True when the reading falls on a day the CBP rules reject.
+glycemic_results,analyte,a1c or gmi.
+glycemic_results,value,Blank when the result is a note or a scanned document.
+glycemic_results,capture,"discrete, note_only, or scanned_pdf."
+glycemic_results,gmi_range_end,The measure dates a GMI on this day. Blank means the GMI cannot be used.
+glucose_results,drawn_at,"Specimen time. Both CMS816 clocks use this, not posted_at."
+glucose_results,posted_at,When the result hit the chart. Present so the two clocks can be compared. Not used in the rate.
+glucose_results,unit,mg/dL or mmol/L. mmol/L is multiplied by 18 before the threshold.
+glucose_results,specimen,"capillary, blood, interstitial, or urine. Urine is ignored."
+glucose_results,in_glucose_value_set,Demonstration stand-in for the CMS glucose value set.
+med_administrations,action,given or ordered_not_given. Only given doses enter CMS816.
+med_administrations,in_hypoglycemic_value_set,Demonstration stand-in for OID 2.16.840.1.113762.1.4.1196.393.
+med_dispenses,drug_class,diabetes or dementia. Stand-in for the HEDIS medication lists.
+meter_held_glucose,drawn_at,A bedside repeat that is not in the EHR extract.
+meter_held_glucose,related_low_result_id,The low glucose this repeat would have cleared.

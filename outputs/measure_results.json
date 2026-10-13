@@ -1,0 +1,72 @@
+{
+  "cbp_ehr": {
+    "numerator": 360,
+    "denominator": 540,
+    "note_only": 30,
+    "nondigital": 30,
+    "high": 120
+  },
+  "cbp_payer": {
+    "numerator": 330,
+    "denominator": 510
+  },
+  "gsd_ehr": {
+    "denominator": 270,
+    "lt8": 144,
+    "mid": 39,
+    "gt9": 42,
+    "missing": 45,
+    "over": 87,
+    "trapped": 15
+  },
+  "gsd_payer": {
+    "denominator": 255,
+    "over": 87,
+    "lt8": 129
+  },
+  "cms": {
+    "numerator": 20,
+    "denominator": 486,
+    "meter_would_remove": 1,
+    "hospitals": [
+      {
+        "id": "H01",
+        "name": "Hospital A",
+        "denominator": 162,
+        "numerator": 6,
+        "meter": 0,
+        "late_repeat": 1
+      },
+      {
+        "id": "H02",
+        "name": "Hospital B",
+        "denominator": 162,
+        "numerator": 7,
+        "meter": 1,
+        "late_repeat": 1
+      },
+      {
+        "id": "H03",
+        "name": "Hospital C",
+        "denominator": 162,
+        "numerator": 7,
+        "meter": 0,
+        "late_repeat": 2
+      }
+    ]
+  },
+  "lowest_cbp_clinics": [
+    "C06",
+    "C07",
+    "C08",
+    "C09",
+    "C10"
+  ],
+  "highest_gsd_clinics": [
+    "C06",
+    "C07",
+    "C08",
+    "C09",
+    "C10"
+  ]
+}

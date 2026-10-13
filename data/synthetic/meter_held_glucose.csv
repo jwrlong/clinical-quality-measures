@@ -1,0 +1,2 @@
+held_id,patient_id,encounter_id,related_low_result_id,drawn_at,value,unit,specimen,in_glucose_value_set,capture
+M00001,P3018,E01950,G00024,2026-05-05T18:03:00,110,mg/dL,capillary,true,discrete

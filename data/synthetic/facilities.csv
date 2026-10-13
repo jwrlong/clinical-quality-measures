@@ -1,0 +1,20 @@
+facility_id,facility_name,facility_type
+C01,Outpatient clinic 01,clinic
+C02,Outpatient clinic 02,clinic
+C03,Outpatient clinic 03,clinic
+C04,Outpatient clinic 04,clinic
+C05,Outpatient clinic 05,clinic
+C06,Outpatient clinic 06,clinic
+C07,Outpatient clinic 07,clinic
+C08,Outpatient clinic 08,clinic
+C09,Outpatient clinic 09,clinic
+C10,Outpatient clinic 10,clinic
+C11,Outpatient clinic 11,clinic
+C12,Outpatient clinic 12,clinic
+C13,Outpatient clinic 13,clinic
+C14,Outpatient clinic 14,clinic
+C15,Outpatient clinic 15,clinic
+H01,Hospital A,hospital
+H02,Hospital B,hospital
+H03,Hospital C,hospital
+LAB,Reference laboratory,laboratory
