@@ -1,44 +1,42 @@
 # Memorandum
 
-**Portfolio note.** Independent demonstration. The organization is illustrative. This memo is written as an internal note to quality leadership.
+**Portfolio note.** Independent demonstration. The organization is illustrative. This memo is written as an internal note to quality leadership. The counts are from a Synthea extract, not from a health system.
 
 **To:** Vice President, Quality, and Chief Medical Officer
 **From:** Quality Analytics
-**Date:** 12 October 2026
-**Subject:** Point-of-care and patient-generated results are not usable for CBP, GSD, or CMS816v5
+**Date:** 13 October 2026
+**Subject:** CBP and GSD denominators cannot be formed from the current extract, and CMS816v5 cannot be scored
 
 ## The gap
 
-The EHR often contains the clinical fact and still cannot feed the measure. A blood pressure, an A1c, a glucose-monitor summary, or a bedside glucose is in a note, a scanned report, or a meter download. The measure needs a discrete number, a test type, and a time. Those three fields are missing or are stored on the wrong clock.
+The specifications need a diagnosis on the encounter, a numeric result, and, for the hospital measure, a medication administration time next to a glucose draw time. In this extract the numeric results are already discrete. Systolic, diastolic, and A1c values are stored as numbers with units. The HEDIS denominators still come out empty, because hypertension and diabetes are written once, when the condition starts, and are not coded on later visits.
 
-This is one capture problem with three consequences. The figures in the next section come from the synthetic extract profiled for this project. Documentation failures were planted so they could be counted. They are not rates from a health system.
-
-- **Controlling High Blood Pressure (HEDIS).** The rate uses the latest eligible 2026 reading with a distinct systolic and diastolic. A repeat clinic pressure or a home reading typed as prose has no values the logic can select, and no source to show that a home reading came from a digital device. The patient counts as not controlled.
-- **Glycemic Status Assessment for Patients With Diabetes (HEDIS).** The over 9.0% rate counts a missing result as poor control. A point-of-care A1c in a progress note, an outside lab sitting as a PDF, or a patient glucose-management indicator without the monitor’s date range never becomes the most recent result. The contract rate rises because the result was not captured, not because the latest value was over 9.0%.
-- **Hospital Harm — Severe Hypoglycemia (CMS816v5).** The false-low check requires a different glucose over 80 mg/dL within five minutes of a result under 40 mg/dL, timed from the draw. That repeat is usually a point-of-care test. When it stays on the meter, posts late, or is typed as a comment on the first result, a false low remains in the numerator and the hospitalization is reported as harm.
+The hospital measure has a separate limit. No glucose in 2026 is under 40 mg/dL, and a medication row is a course with a start, a stop, and a dispense count. A course cannot place a dose inside the 24 hours before a draw.
 
 ## What the extract showed
 
-The profile in `docs/data-profile.md` applied the measure specifications to the file.
+The profile in `docs/data-profile.md` applied the written specifications to the Synthea file (Massachusetts, seed 2026, history through 13 October 2026). Measurement year 2026 is incomplete in this file.
 
-- **CBP.** Of 540 patients in the EHR denominator, 30 are not controlled because the 2026 blood pressure is text with no systolic or diastolic. Example: patient P1061, clinic 06, note "BP 132/78 today." Another 30 are not controlled because the only reading is from a non-digital home device. That second group is the specification, not a missing interface. The EHR rate is 360 / 540 (66.7%). The payer-aligned rate is 330 / 510 (64.7%).
-- **GSD.** Of 270 patients in the EHR denominator, 45 have no usable result and therefore sit in the over-9.0% rate: 15 notes, 15 scanned documents, and 15 glucose-management indicators with a number and no monitor date range. They are 45 of the 87 patients in that rate. Fifteen more are scored on an older A1c of 9.4% while a later result is stuck in a note. The EHR over-9.0% rate is 87 / 270 (32.2%).
-- **CMS816v5.** The pooled rate is 20 / 486 hospitalizations (4.1%). One of those numerator stays, at Hospital B, has a repeat of 110 mg/dL three minutes later that exists only on the meter file. The same event at Hospital A is not in the numerator, because the repeat reached the extract. The Hospital C stay is in the numerator for a different reason: its repeat is in the extract and is six minutes later, outside the rule.
+- **Controlling High Blood Pressure (HEDIS).** Patients with essential hypertension (SNOMED 59621000) on two qualifying encounters in the identification window: 0. Patients with that condition active in the window: 514. Of those, 387 also have two qualifying visits. The code is on the onset row. Example: patient `4675cf35-1466-3c14-4e58-6ffdc29d6270`, onset 29 October 1977, four qualifying visits in the window, one paired 2026 blood pressure, and no hypertension code on those visits. The contract rate is not calculated.
+- **Glycemic Status Assessment for Patients With Diabetes (HEDIS).** Patients with two diabetes diagnosis dates in any non-laboratory setting during 2025 or 2026: 0. Patients with one diagnosis date in that span plus a diabetes medication course that records at least one dispense: 4. Those four are not a contract denominator. A course with a dispense count is the closest field this file has to a pharmacy fill. Type 2 diabetes is active for 163 patients, and 131 of them have two qualifying visits. Each person still has one diagnosis date. Glucose-management indicator rows: 0. A1c values that exist are numeric percents.
+- **Hospital Harm — Severe Hypoglycemia (CMS816v5).** Adult inpatient encounters that end in 2026: 60. Glucose results under 40 mg/dL in 2026: 0. On those adult stays the file holds 70 blood or serum glucose results, and the lowest is 64.8 mg/dL. Eleven of the stays overlap an insulin course. Overlap of a course is not an administration. Urine glucose strips are in the file and were ignored. The measure is not scored.
 
-Clinics 06 through 10 are the weak end of both contract measures in this file. That is where the planted text, notes, and scans were assigned. The split above is what keeps that ranking from being read as worse clinical control.
+The file is a statewide population with 946 organizations. It does not support a 15-clinic ranking or a three-hospital comparison.
+
+A recount that reused the problem list is in the profile, labeled as a different measure. It is not on the leadership tiles. For that recount, 15 of 105 adults with active diabetes and two visits have no 2026 A1c. The numerator rule would treat a missing result as over 9.0%. That arithmetic stays off the page, because those 105 patients are not the HEDIS denominator.
 
 ## What we will do now
 
-We will not relax the specifications to read free text into the official rate. A note can nominate a chart for review. It cannot silently change a HEDIS result or a CMS submission.
+The three leadership tiles stay blank, with the failed count printed on the tile. A denominator of zero is not displayed as 0%.
 
-Until device interfaces are in place, reporting carries three controls.
+We will not recode the problem list onto the encounters in order to produce a rate. That would answer a different question from the one the contract and CMS ask.
 
-1. **Show the missing-result share next to the rate.** On the leadership page, CBP shows the share of the denominator with no usable blood pressure. GSD splits the over 9.0% rate into a numeric result over 9.0% and no usable result. Leaders can see how much of the rate is capture.
-2. **Review the charts this gap affects.** For CBP and GSD, abstract the “no usable result” sample already defined in the measure specifications, and record values that exist only in notes or scans. For CMS816v5, review numerator stays whose low glucose is a point-of-care result, and check the meter for a repeat within five minutes. Confirmed values are used in the validated rate. They are not imputed for stays that were not reviewed.
-3. **Label the population.** The HEDIS figures remain an EHR clinic rate until membership and dispensing files are applied. CMS816v5 remains the hospitalization rate in the specification, not a count of every glucose under 40 mg/dL.
+When a production extract is available, the first test is the one this file failed: for patients who have hypertension or diabetes on the problem list and two qualifying visits, does each visit carry the diagnosis as its own coded row? Chart review of that sample records whether the note supports the diagnosis on that date. Confirmed visits can correct a mapping error. They do not become the official rate for patients who were not reviewed.
+
+Membership spans in this file can be tested for a 45-day gap, one payer at a time. They cannot support the institutional exclusion. Plan ownership is self, spouse, or guardian. There is no institutional special-needs flag and no long-term-institution flag.
 
 ## What we are asking to fund
 
-Interface the clinic glucometers, point-of-care A1c devices, and hospital bedside meters so each result lands as its own observation: numeric value, unit, specimen type, and device time. Add two structured documentation fields. Home blood pressure stores systolic, diastolic, and whether the device was digital. A patient glucose-management indicator stores the number and the monitor date range, and the measure dates the result on the last day of that range.
+Fund encounter diagnosis capture for the two contract measures. The hypertension or diabetes code has to be stored on the visit that is supposed to count, including when the condition has been on the problem list for years. Add a pre-close check that counts patients with the problem and two visits, and counts how many of those visits carry the code. The check fails closed: if the second count is near zero, the rate is withheld.
 
-That is the workaround that removes the gap. Chart review covers the year now in progress. It does not scale to every clinic visit, and it will not see a bedside repeat that was never exported from the meter.
+For CMS816v5, a production feed still has to carry medication administration start times and glucose draw times, in mg/dL, excluding urine. This extract does not justify a meter-interface purchase. The severe-low event is absent here, and the blood pressure and A1c values that are present are already discrete numbers.

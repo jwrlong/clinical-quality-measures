@@ -1,6 +1,6 @@
 # Quality measure specifications
 
-**Portfolio note.** This is an independent demonstration for a regional health system with 3 hospitals and about 15 outpatient clinics. The organization is illustrative. The specifications below are plain-language operational definitions for internal quality work. They are not a copy of the licensed HEDIS Volume 2, and they are not a substitute for the CMS eCQM package. Production reporting uses the version locked for the measurement year. Counts from the synthetic extract are in `docs/data-profile.md`. Those counts are not a health system's results.
+**Portfolio note.** This is an independent demonstration for a regional health system with 3 hospitals and about 15 outpatient clinics. The organization is illustrative. The specifications below are plain-language operational definitions for internal quality work. They are not a copy of the licensed HEDIS Volume 2, and they are not a substitute for the CMS eCQM package. Production reporting uses the version locked for the measurement year. Counts from the Synthea extract are in `docs/data-profile.md`. Those counts describe that file. They are not a health system's results. The folder `data/synthetic/` is an earlier hand-built file and is not the analysis dataset.
 
 **Measurement year.** 1 January 2026 through 31 December 2026.
 
@@ -43,7 +43,9 @@ This is the HEDIS population. The official payer rate also depends on membership
 
 - Age 18 through 85 on 31 December 2026.
 - Continuously enrolled with the contracting payer during 2026, with no more than one gap of up to 45 days, and still enrolled on 31 December 2026. This rule comes from the payer membership file.
-- At least two qualifying encounters on different dates of service between 1 January 2025 and 30 June 2026, each carrying a hypertension diagnosis from the HEDIS hypertension value set. Qualifying encounters are outpatient visits, telephone visits, and online assessments.
+- At least two qualifying encounters on different dates of service between 1 January 2025 and 30 June 2026, each carrying a hypertension diagnosis from the HEDIS hypertension value set. Qualifying encounters are outpatient visits, telephone visits, and online assessments. The diagnosis is part of each visit. A problem-list onset that is not tied to two visit dates does not meet this event.
+
+**Where this event was checked.** NCQA publishes the event as a visit value set combined with the Essential Hypertension value set, and the reading is taken on or after the second diagnosis. Measurement-year 2026 guides from Blue Cross NC, Priority Health, BCBST, Carolina Complete Health, and BCBSND use that event. The licensed Volume 2 was not the copy open for this check. Production reporting still uses that volume.
 
 **Numerator.** Patients in the denominator whose most recent eligible blood pressure in 2026 is controlled.
 
@@ -140,8 +142,10 @@ This is the HEDIS population. Membership data still sit outside the EHR. An inte
 - Age 18 through 75 on 31 December 2026.
 - Continuously enrolled with the contracting payer during 2026, with a medical benefit, no more than one gap of up to 45 days, and still enrolled on 31 December 2026. This rule comes from the payer membership file.
 - Diabetes identified in 2025 or 2026 by at least one of these methods. Search both methods. Either one is enough.
-  - **Encounters.** Two diagnoses of diabetes, from the HEDIS diabetes value set, on different dates of service. Do not count a laboratory claim (place of service 81) as one of those diagnoses.
-  - **Pharmacy.** One diabetes diagnosis from that same value set, plus one dispensing event for insulin or another diabetes medication on the HEDIS diabetes medication list. An order in the EHR is not a dispensing event.
+  - **Encounters.** Two diagnoses of diabetes, from the HEDIS diabetes value set, on different dates of service, in any setting. Do not count a laboratory claim (place of service 81) as one of those diagnoses. The setting is not limited to an outpatient visit.
+  - **Pharmacy.** One diabetes diagnosis from that same value set during 2025 or 2026, plus one dispensing event for insulin or another diabetes medication on the HEDIS diabetes medication list during that same span. An order in the EHR is not a dispensing event. An onset dated before 2025 does not supply the diagnosis date.
+
+**Where this event was checked.** NCQA's current glycemic-status event counts two diagnosis dates in any setting, or one diagnosis date plus a dispensing event, both inside the measurement year or the year before it. Laboratory claims are excluded. The same Volume 2 limit applies.
 
 **Both rates use the same test.** Find the most recent A1c or GMI in 2026. If results from the EHR, claims, and supplemental files are combined, the most recent result wins regardless of which file it came from. If several results share a date, use the lowest result.
 
@@ -169,7 +173,7 @@ Code lists, including the diabetes value set, the diabetes medication list, and 
 | --- | --- |
 | Date of birth, and date of death if recorded | Age on 31 December 2026, and the death exclusion |
 | Encounter date and diagnosis code | The two diabetes diagnoses in 2025 or 2026. Laboratory-only claims are not diagnosis events |
-| Problem list | Supporting clinical context. A problem-list entry alone does not satisfy the two-encounter method |
+| Problem list | Supporting clinical context. A problem-list entry alone does not supply two diagnosis dates, and an onset before 2025 does not supply the pharmacy-path diagnosis date |
 | A1c result, numeric value, test date, and LOINC or local test code | The most recent glycemic status, and which rate the patient falls in |
 | GMI result, the monitor’s date range, and the last date in that range | Dating a continuous-glucose-monitor result and comparing it with A1c dates |
 | Where the result lives | Separating a discrete lab result from a scanned report, a portal note, or a device screenshot |
@@ -180,7 +184,7 @@ Code lists, including the diabetes value set, the diabetes medication list, and 
 
 ### Data quality issues that miscount patients
 
-- **The denominator is built from the wrong diabetes evidence.** One encounter, or a problem-list entry alone, is not the two-encounter method. A laboratory claim billed as place of service 81 is not a diagnosis event. Using it adds patients who only had a rule-out test. Ignoring the pharmacy path drops patients who have one diagnosis and a filled diabetes medication.
+- **The denominator is built from the wrong diabetes evidence.** One diagnosis date, or a problem-list entry alone, is not the two-date method. A laboratory claim billed as place of service 81 is not a diagnosis event. Using it adds patients who only had a rule-out test. Ignoring the pharmacy path drops patients who have one diagnosis and a filled diabetes medication. An onset from before the two-year window does not count as the pharmacy-path diagnosis.
 - **An order is treated as a fill.** The pharmacy path requires a dispensing event. An active medication on the list, or an order that was never filled, puts the patient in the denominator early.
 - **The best result of the year is used.** The measure uses the most recent result. A well-controlled A1c in March does not count if a later result is higher. Across files, the latest date wins even when an older result is the only one stored as a clean number.
 - **Same-day results are averaged or the last one is kept.** Several results on one date resolve to the lowest result, not the average and not the last one entered.

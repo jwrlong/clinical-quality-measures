@@ -1,4 +1,7 @@
-"""Profile the synthetic extract and write the measurement-year data profile."""
+"""Profile the hand-built extract. This is a rule check, not the analysis profile.
+
+The analysis profile is written by src/profile_synthea.py to docs/data-profile.md.
+"""
 
 from __future__ import annotations
 
@@ -15,7 +18,7 @@ from measures import evaluate_cbp, evaluate_cms816, evaluate_gsd  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data" / "synthetic"
-PROFILE = ROOT / "docs" / "data-profile.md"
+PROFILE = ROOT / "outputs" / "hand_built_profile.md"
 SUMMARY = ROOT / "outputs" / "measure_results.json"
 
 
@@ -367,9 +370,9 @@ def render(data, cbp, gsd, cms):
         for row in hospitals
     )
     counts = data["raw_counts"]
-    text = f"""# Data profile, measurement year 2026
+    text = f"""# Hand-built rule check, measurement year 2026
 
-**Portfolio note.** Independent demonstration. Every row in `data/synthetic/` is synthetic. The extract was built so the rules in `docs/measure-specifications.md` could be counted, including planted documentation failures. The percentages below are not a health system's performance and are not a prevalence estimate.
+**Portfolio note.** Independent demonstration. Every row in `data/synthetic/` is synthetic. The extract was built so the rules in `docs/measure-specifications.md` could be counted, including planted documentation failures. The percentages below are not a health system's performance and are not a prevalence estimate. They are not the analysis. The analysis profile is `docs/data-profile.md`, from the Synthea extract.
 
 **How this was produced.** `python3 src/test_measures.py`, then `python3 src/generate_extract.py`, then `python3 src/profile_measures.py`. The calculator reads the CSV files. It does not read the scenario name when it decides a rate. The scenario name is used only to explain a row after the fact.
 

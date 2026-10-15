@@ -1,0 +1,59 @@
+{
+  "patients": 2285,
+  "seed": 2026,
+  "clinician_seed": 2026,
+  "reference": "20261013",
+  "version": "d9d07a6",
+  "state": "Massachusetts",
+  "extract_end": "2026-10-13",
+  "htn_literal": 0,
+  "htn_active": 514,
+  "htn_two_visits": 387,
+  "htn_proxy": 353,
+  "htn_with_bp": 299,
+  "htn_controlled_proxy": 209,
+  "htn_enrolled_proxy": 251,
+  "example": {
+    "id": "4675cf35-1466-3c14-4e58-6ffdc29d6270",
+    "onset": "1977-10-29",
+    "coded_encounters": 0,
+    "qualifying_visits": 4,
+    "has_bp": true,
+    "preferred": true
+  },
+  "dm_literal": 0,
+  "dm_active": 163,
+  "dm_two_visits": 131,
+  "dm_pharmacy_only": 4,
+  "dm_literal_kept": 4,
+  "a1c_bands": {
+    "under 8.0%": 4
+  },
+  "a1c_missing": 0,
+  "dm_list_kept": 105,
+  "list_bands": {
+    "under 8.0%": 89,
+    "8.0% through 9.0%": 1
+  },
+  "list_missing": 15,
+  "open_spans": 0,
+  "gmi_rows": 0,
+  "urine_glucose_2026": 833,
+  "inpatient_2026": 61,
+  "adult_inpatient": 60,
+  "glucose_under_40": 0,
+  "inpatient_lows": 0,
+  "adult_stay_glucoses": 70,
+  "min_glucose_adult_stay": 64.8,
+  "insulin_course_overlap": 11,
+  "ownership_values": [
+    "(blank)",
+    "Guardian",
+    "Self",
+    "Spouse"
+  ],
+  "diabetes_rows": {
+    "44054006 Diabetes mellitus type 2 (disorder)": 163
+  },
+  "organizations": 946
+}

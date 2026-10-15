@@ -1,2 +1,7 @@
 __pycache__/
 *.pyc
+tools/*.jar
+data/synthea/csv/
+data/synthea/fhir/
+data_raw/synthea/
+warehouse/*.duckdb

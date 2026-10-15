@@ -65,6 +65,7 @@ Trust
 - **Monthly close.** The front page updates after the monthly close. A mid-month extract can be used in drill and is labeled preliminary.
 - **Small denominators.** A clinic or a hospital with a denominator under 30 displays the count and suppresses the sparkline. The rate remains visible as a fraction so a single event cannot look like a trend.
 - **Direction.** Each tile states whether a higher or a lower rate is better. GSD’s two rates state both directions.
+- **Unformable denominator.** When the extract cannot build the denominator in the specification, the tile says the rate cannot be calculated and shows the count that failed. It does not display 0% or a stand-in population as the contract rate.
 
 ## Drill
 
@@ -81,29 +82,30 @@ Exclusion lists, value set identifiers, and enrollment-gap detail stay in the sp
 
 The page does not combine CBP, GSD, and CMS816v5 into one score. The programs, settings, and directions differ. It does not color a cell red or green from a threshold the contract or CMS has not set. It does not show a rate movement in the same month the logic changed, without a note that the definition changed.
 
-## Synthetic run
+## Synthea run
 
-The layout above is the page. This section is the only place it is filled in. The figures come from `data/synthetic/` and are explained in `docs/data-profile.md`. The extract plants documentation failures so they can be counted. It is not a prevalence file, and these are not a health system's rates. Membership is present, so both population labels can be shown. No contract target is filled in, because this project has no payer exhibit.
+The layout above is the page. This section is the only place it is filled in. The counts come from the Synthea extract profiled in `docs/data-profile.md`. Seed 2026, Massachusetts, history through 13 October 2026. The measurement year is incomplete. The file is a statewide synthetic population, with 946 organizations, so there is no clinic ranking and no three-hospital comparison. No contract target is filled in, because this project has no payer exhibit.
 
 ```
 Quality performance
-Synthetic extract, measurement year 2026
+Synthea extract, through 13 October 2026
 Not a health-system result
 
 +---------------------------+---------------------------+---------------------------+
 | CBP                       | GSD                       | CMS816v5                  |
-| Payer-aligned             | Payer-aligned             | EHR hospital extract      |
-| 64.7% controlled          | 34.1% over 9.0%           | 4.1% of hospitalizations  |
-| Higher is better          | Lower is better           | Lower is better           |
-| 330 / 510                 | 87 / 255                  | 20 / 486                  |
-| EHR clinic rate: 66.7%    | Under 8.0%: 50.6%         | Hospital A 3.7%           |
-| 360 / 540                 | 129 / 255                 | Hospital B 4.3%           |
-| No usable BP: 60          | No usable result: 45      | Hospital C 4.3%           |
-| 30 of those are text      | 45 / 87 of the over-9.0%  | Meter-only repeat: 1 stay |
-| Contract target: —        | Contract target: —        | at Hospital B             |
+| Rate cannot be calculated | Rate cannot be calculated | Rate cannot be calculated |
+| HEDIS · encounter dx      | HEDIS · encounter dx      | CMS eCQM · hospitals      |
+|                           |                           |                           |
+| 0 patients have the       | 0 patients have two       | 60 adult stays end in     |
+| hypertension code on two  | diabetes diagnosis dates  | 2026                      |
+| qualifying encounters     | in any non-lab setting    | Glucose under 40 mg/dL: 0 |
+| 514 have the condition    | 4 meet diagnosis plus a   | Lowest glucose on those   |
+| active in the window      | medication course         | stays: 64.8 mg/dL         |
+| Contract target: —        | Contract target: —        | Administration time:      |
+|                           |                           | not in the file           |
 +---------------------------+---------------------------+---------------------------+
 ```
 
-Clinics 06 through 10 are the five lowest CBP rates (60.0%) and the five highest GSD over-9.0% rates (45.5%). That pattern is in the file because the planted text readings, notes, and scans were assigned to those clinics. The method is what would transfer to a live extract: sort the clinics, then split "no usable result" from a real out-of-range value before anyone treats the sort as a performance ranking.
+The blood-pressure and A1c values that Synthea writes are discrete numbers. The HEDIS denominators still fail, because the diagnosis is stored once, at onset, and is not coded on the later visits. Publishing 0% would read as perfect or as failure, depending on the measure. The tile stays blank and shows the count that failed.
 
-The CBP payer-aligned rate is lower than the EHR rate because 30 patients with a controlled reading fail continuous enrollment and drop out. The GSD payer-aligned over-9.0% rate is higher than the EHR rate because the 15 patients who fail enrollment are under 8.0%, so they leave the denominator and stay out of the numerator. Enrollment does not move every rate in the same direction. The page keeps the two labels apart for that reason.
+A problem-list recount is in the profile and is labeled as a different measure. It is not placed on these tiles. CMS816v5 is not scored: this file has no glucose under 40 mg/dL, and medication rows are courses rather than administration events.

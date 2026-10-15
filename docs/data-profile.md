@@ -1,156 +1,102 @@
-# Data profile, measurement year 2026
+# Data profile, Synthea extract
 
-**Portfolio note.** Independent demonstration. Every row in `data/synthetic/` is synthetic. The extract was built so the rules in `docs/measure-specifications.md` could be counted, including planted documentation failures. The percentages below are not a health system's performance and are not a prevalence estimate.
+**Portfolio note.** Independent demonstration. The rows are synthetic patients produced by Synthea, not records from a health system, a payer, or CMS. The counts below describe this file only.
 
-**How this was produced.** `python3 src/test_measures.py`, then `python3 src/generate_extract.py`, then `python3 src/profile_measures.py`. The calculator reads the CSV files. It does not read the scenario name when it decides a rate. The scenario name is used only to explain a row after the fact.
+**Source.** Synthea version `d9d07a6`, state Massachusetts, seed 2026, clinician seed 2026, reference date 20261013. The run asked for 2,000 living patients. The patient file contains 2285 people, living and deceased. Clinical history in the files runs through 2026-10-13. Measurement year 2026 is therefore incomplete: November and December are not in the extract.
 
-## What is in the file
+**How to regenerate.** From the repository root, with Java 17 or newer:
 
-The extract holds three cohorts in one set of tables, because that is how an analyst usually receives data: one patient file, one encounter file, and the clinical tables beside them.
+```
+java -jar tools/synthea-with-dependencies.jar -s 2026 -cs 2026 -r 20261013 -p 2000 --exporter.csv.export=true --exporter.fhir.export=false --exporter.ccda.export=false --exporter.baseDirectory=data/synthea --exporter.years_of_history=10 --generate.thread_pool_size=1 Massachusetts
+python3 src/profile_synthea.py
+```
 
-| Table | Rows |
+The CSV files are produced locally and are not committed. They are larger than the repository should carry, and the seed above is what makes the run repeatable.
+
+## What was asked of this file
+
+The specifications ask for dated diagnosis evidence, a numeric blood pressure or A1c, and, for the hospital measure, a medication administration time and a glucose draw time. This section records what Synthea actually stored.
+
+For blood pressure, a qualifying visit is Synthea's ambulatory, wellness, outpatient, or virtual class. Those stand in for outpatient, telephone, and online visits. Urgent care, emergency, and inpatient encounters are not used for that count. This is a class map for this file. It is not the HEDIS value set. For diabetes, a diagnosis date in any encounter class counts, except a laboratory encounter. Synthea has no place-of-service field, so that class exclusion is the stand-in for a laboratory claim.
+
+| Table fact | Count |
 | --- | ---: |
-| Patients | 1450 |
-| Encounters | 2431 |
-| Blood pressures | 700 |
-| Glycemic results | 330 |
-| Glucose results in the EHR extract | 512 |
-| Glucose results held on the meter, not in the EHR extract | 1 |
+| Patients in the file | 2285 |
+| Essential hypertension (SNOMED 59621000) active in the identification window | 514 |
+| Type 2 diabetes (SNOMED 44054006) active in 2025 or 2026 | 163 |
+| Inpatient encounters that end in 2026 | 61 |
+| Glucose-management indicator rows (LOINC 97506-0) | 0 |
+| Urine glucose strip results in 2026, ignored by CMS816v5 | 833 |
+| Provider organizations in the file | 946 |
 
-`data/synthetic/data_dictionary.csv` defines the columns. `meter_held_glucose.csv` is not part of the EHR extract. The official CMS816v5 rate does not see it.
+The file is a Massachusetts population. It is not a 15-clinic health system, and the organizations are not rolled into that shape.
 
-Starting a denominator from every patient in the file would be a mistake. Most of the file is in a different cohort and was never a candidate for that measure. Each waterfall below starts from its own cohort.
+## How the event rule was checked
 
-The failure rows are planted. A routine panel, with discrete results and complete enrollment, sits beside them so a clean record can be told from a capture failure. A rate that mixes the two describes this teaching file. It does not describe a clinic.
+The licensed HEDIS Volume 2 for measurement year 2026 was not the copy open for this check. Production reporting still uses that volume. The events below follow NCQA's published specification language and measurement-year 2026 plan guides that cite it.
+
+Controlling High Blood Pressure uses two visits on different dates, and the hypertension diagnosis is part of each visit. The window runs from 1 January 2025 through 30 June 2026. The visits may be outpatient, telephone, e-visit, or virtual check-in. The blood pressure has to fall on or after the second of those diagnosis dates. NCQA writes the event as a visit value set combined with the Essential Hypertension value set. Guides from Blue Cross NC, Priority Health, BCBST, Carolina Complete Health, and BCBSND use that event for 2026. One Florida Blue sheet lists the visits and "any diagnosis of hypertension" as separate bullets. That sheet still requires the second diagnosis date, so a single problem-list onset does not qualify.
+
+Glycemic status uses two diabetes diagnosis dates of service in any setting during 2025 or 2026, excluding a laboratory claim, or one diagnosis date in that span plus a dispensing event in that span. That is NCQA's current event, the one that replaced a list of specific visit types.
 
 ## Controlling High Blood Pressure
 
-Cohort size: 640 patients.
+The HEDIS denominator needs two outpatient, telephone, or online encounters in the identification window, on different dates, each carrying a hypertension diagnosis.
 
-| Step | Patients |
-| --- | ---: |
-| In the hypertension cohort | 640 |
-| Age 18 through 85 on 31 December 2026 | 630 |
-| Removed for age | 10 |
-| Age in range but fewer than two qualifying hypertension encounters in the identification window | 30 |
-| Removed by an exclusion after the encounter rule | 60 |
-| EHR denominator | 540 |
-| Also continuously enrolled: payer-aligned denominator | 510 |
+Encounters in that window that carry SNOMED 59621000 and have a qualifying class: patients with two such encounters = **0**.
 
-EHR clinic rate: **360 / 540 (66.7%)** controlled. Higher is better.
+The contract rate is not calculated. A denominator of zero is not a performance result.
 
-Payer-aligned rate: **330 / 510 (64.7%)** controlled. The 30 patients in the EHR denominator and not in the payer denominator failed continuous enrollment. They are a real difference between an internal rate and a contract rate. They are not a capture gap.
+The condition is present. 514 patients have essential hypertension active during the window. 387 of them also have two qualifying visits in the window. No patient has the hypertension code on two of those visits. The usual shape is one condition row, dated at onset. Reusing the problem list would put 353 adults age 18 to 85, with no death, hospice, pregnancy, or end-stage renal row found in 2026, into an internal denominator. That reuse is a different measure. Of those 353, 299 have a paired numeric systolic and diastolic in 2026 on an eligible encounter. 209 of those pairs are under 140 and under 90. Those counts describe the values in the file. They are a description, and the contract tile stays blank.
 
-Among the EHR denominator:
+Payer spans have start and end timestamps. The file contains 0 spans with a blank end date. 251 of the internal-denominator patients have one payer whose own spans cover 31 December 2026 and meet the 45-day gap rule. Spans from different payers were not merged. Named payers are present, including Medicare, Medicaid, and Dual Eligible. Plan ownership on the member span takes these values: (blank), Guardian, Self, Spouse. Guardian, Self, and Spouse are subscriber relationships. A blank value is an empty field. The span does not identify an institutional special needs plan or a long-term institution, so that exclusion is not applied. Home blood-pressure device type is absent, so a home reading is not used. Clinical rows stop on 2026-10-13, so a 2026 blood pressure in this file cannot fall in November or December.
 
-| Result | Patients |
-| --- | ---: |
-| Controlled | 360 |
-| Not controlled, usable reading at or above 140/90 | 120 |
-| Not controlled, blood pressure exists only as text | 30 |
-| Not controlled, only reading is an ineligible home device | 30 |
-
-The text readings are the capture gap. The ineligible home device is the specification working as written: a non-digital home reading does not count, and those patients have no other 2026 reading. Both groups sit inside "not controlled." The leadership page has to show them separately, or a device rule looks like missing data.
-
-Clinic rates use the attributed clinic and the EHR denominator. Clinics 06 through 10 hold the planted text readings, and they are the five lowest rates.
-
-| Clinic | Controlled | Rate | No usable reading |
-| --- | ---: | ---: | ---: |
-| Outpatient clinic 06 | 24 / 40 | 60.0% | 8 |
-| Outpatient clinic 07 | 24 / 40 | 60.0% | 8 |
-| Outpatient clinic 08 | 24 / 40 | 60.0% | 8 |
-| Outpatient clinic 09 | 24 / 40 | 60.0% | 8 |
-| Outpatient clinic 10 | 24 / 40 | 60.0% | 8 |
-| Outpatient clinic 01 | 24 / 34 | 70.6% | 2 |
-| Outpatient clinic 02 | 24 / 34 | 70.6% | 2 |
-| Outpatient clinic 03 | 24 / 34 | 70.6% | 2 |
-| Outpatient clinic 04 | 24 / 34 | 70.6% | 2 |
-| Outpatient clinic 05 | 24 / 34 | 70.6% | 2 |
-| Outpatient clinic 11 | 24 / 34 | 70.6% | 2 |
-| Outpatient clinic 12 | 24 / 34 | 70.6% | 2 |
-| Outpatient clinic 13 | 24 / 34 | 70.6% | 2 |
-| Outpatient clinic 14 | 24 / 34 | 70.6% | 2 |
-| Outpatient clinic 15 | 24 / 34 | 70.6% | 2 |
+Patient `4675cf35-1466-3c14-4e58-6ffdc29d6270` has essential hypertension recorded on 1977-10-29. That code is attached to no qualifying encounter in the identification window. The same patient has 4 qualifying visits in the window, and a paired 2026 blood pressure.
 
 ## Glycemic Status Assessment for Patients With Diabetes
 
-Cohort size: 315 patients. EHR denominator: 270. Payer-aligned denominator: 255.
+The HEDIS denominator needs two diabetes diagnosis dates of service in any non-laboratory setting during 2025 or 2026, or one such diagnosis date plus a diabetes medication dispense in that span.
 
-| EHR result | Patients | Share of EHR denominator |
-| --- | ---: | ---: |
-| Under 8.0% | 144 | 53.3% |
-| 8.0% through 9.0% | 39 | 14.4% |
-| Over 9.0%, numeric result | 42 | 15.6% |
-| No usable result | 45 | 16.7% |
+Patients with two diabetes diagnosis dates in that span: **0**.
 
-Over 9.0% rate, EHR: **87 / 270 (32.2%)**. Lower is better. This rate adds the numeric results over 9.0% and the patients with no usable result.
+Patients with one in-window diabetes diagnosis date plus a diabetes medication course that has at least one dispense, and who do not already have two diagnosis dates: **4**.
 
-Of the 87 patients in that rate, 45 have no usable result (51.7% of the numerator). Those 45 split into 15 notes, 15 scanned documents, and 15 glucose-management indicators that have a number and no monitor date range.
+Patients who meet either written method, are age 18 to 75, and are not removed for death, hospice, or palliative care: **4**. The contract rate is not calculated from that count. A medication row here is a course with a dispense count, which is the closest field the file has to a pharmacy fill.
 
-15 other patients are in the numeric over-9.0% group because the most recent usable lab is over 9.0%, while a later result sits in a note. The measure cannot use the note. The chart and the rate disagree.
+Diabetes condition rows in the file: SNOMED 44054006, Diabetes mellitus type 2 (disorder), 163 rows. 163 patients have type 2 diabetes active in the two-year span, and 131 of those also have two qualifying visits. The diagnosis is stored at onset and is not coded again on the later visits. Reusing the problem list would put 105 adults age 18 to 75, with no death, hospice, or palliative row in 2026, into an internal list. That list is a different measure. There are no glucose-management indicator rows. Hemoglobin A1c, when present, is a numeric percent (LOINC 4548-4).
 
-Payer-aligned over 9.0% rate: **87 / 255 (34.1%)**. Under 8.0%, payer-aligned: **129 / 255 (50.6%)**.
+A1c values among the 4 patients who meet a written identification method:
 
-Clinic rates below use the EHR denominator. A higher over-9.0% rate is worse. Clinics 06 through 10 again carry the planted notes and scans.
+| 2026 A1c | Patients |
+| --- | ---: |
+| Under 8.0% | 4 |
+| 8.0% through 9.0% | 0 |
+| Over 9.0% | 0 |
+| No A1c in the extract | 0 |
 
-| Clinic | Over 9.0% | Rate | No usable result |
-| --- | ---: | ---: | ---: |
-| Outpatient clinic 06 | 10 / 22 | 45.5% | 7 |
-| Outpatient clinic 07 | 10 / 22 | 45.5% | 7 |
-| Outpatient clinic 08 | 10 / 22 | 45.5% | 7 |
-| Outpatient clinic 09 | 10 / 22 | 45.5% | 7 |
-| Outpatient clinic 10 | 10 / 22 | 45.5% | 7 |
-| Outpatient clinic 04 | 4 / 16 | 25.0% | 1 |
-| Outpatient clinic 05 | 4 / 16 | 25.0% | 1 |
-| Outpatient clinic 11 | 4 / 16 | 25.0% | 1 |
-| Outpatient clinic 12 | 4 / 16 | 25.0% | 1 |
-| Outpatient clinic 13 | 4 / 16 | 25.0% | 1 |
-| Outpatient clinic 14 | 4 / 16 | 25.0% | 1 |
-| Outpatient clinic 15 | 4 / 16 | 25.0% | 1 |
-| Outpatient clinic 01 | 3 / 16 | 18.8% | 1 |
-| Outpatient clinic 02 | 3 / 16 | 18.8% | 1 |
-| Outpatient clinic 03 | 3 / 16 | 18.8% | 1 |
+A1c values among the 105 patients in the problem-list description, which is not a reportable denominator:
+
+| 2026 A1c | Patients |
+| --- | ---: |
+| Under 8.0% | 89 |
+| 8.0% through 9.0% | 1 |
+| Over 9.0% | 0 |
+| No A1c in the extract | 15 |
+
+Neither table is a GSD rate. The first follows the written identification methods and is too small to display. The second describes the A1c file if the problem list is reused. In that second table, 15 patients have no 2026 A1c. The numerator rule would place a missing result in the over-9.0% rate. That step is not taken here, because those patients are not the HEDIS denominator.
 
 ## Hospital Harm — Severe Hypoglycemia
 
-Inpatient encounters evaluated: 495. Denominator: 486. Numerator: 20.
+Adult inpatient encounters that end in 2026: **60**.
 
-Pooled rate: **20 / 486 (4.1%)**. Lower is better. The denominator is dominated by 450 background stays with a glucose of 142 mg/dL after insulin, so the planted harm cases do not become the whole rate. Even so, harm cases were inserted on purpose. This is not a hospital's expected rate.
+Glucose results under 40 mg/dL in 2026, in any setting: **0**. On those adult stays, glucose results from blood or serum: 70. The lowest of them is 64.8 mg/dL.
 
-| Hospital | Numerator stays | Rate | Stays that a meter export would remove | Stays whose repeat was documented after five minutes |
-| --- | ---: | ---: | ---: | ---: |
-| Hospital A | 6 / 162 | 3.7% | 0 | 1 |
-| Hospital B | 7 / 162 | 4.3% | 1 | 1 |
-| Hospital C | 7 / 162 | 4.3% | 0 | 2 |
+Medication rows are courses. They have a start, a stop, and a dispense count. They are not administration events. 11 adult stays overlap an insulin course. Overlap of a course does not locate a dose within 24 hours of a draw.
 
-Hospital denominators in this file are equal, so a pooled rate and an unweighted average of the three rates match. In a live file they will not. The dashboard pools hospitalizations.
+CMS816v5 is not scored. The numerator event does not occur in this file, and the administration clock the specification uses is not in the file. Urine glucose strips are present and were not treated as blood glucose.
 
-The same clinical event was written three ways:
+## What this file changes in the packet
 
-| Hospital | Official numerator | Why |
-| --- | --- | --- |
-| Hospital A | No | A repeat of 110 mg/dL three minutes later is in the extract, so the low is cleared. |
-| Hospital B | Yes | The same repeat exists only in `meter_held_glucose.csv`. The official rate counts the stay. |
-| Hospital C | Yes | A repeat of 110 mg/dL is in the extract six minutes later. The five-minute rule does not clear it. This is not a missing interface. |
+The gap is not a blood pressure buried in a note. Systolic, diastolic, and A1c values that Synthea writes are discrete numbers. The gap is the diagnosis. Hypertension and diabetes are recorded when they start and are not coded on later encounters, so the HEDIS denominators cannot be formed. The hospital measure has a second, separate limit: no glucose under 40 mg/dL, and no medication administration time.
 
-One stay, at Hospital B, is in the CMS816v5 numerator only because the bedside repeat never reached the EHR. Hospital C looks similar on the rate and has a different problem.
-
-## What the gap looks like in this file
-
-The gap named in the memo is visible, and it is not the whole story of "not controlled."
-
-- CBP: 30 denominator patients have a 2026 blood pressure only as text. They count as not controlled. Another 30 are not controlled because the only reading is from a non-digital home device.
-- GSD: 45 denominator patients have no usable A1c or GMI, so they sit in the over-9.0% rate. 15 more are scored on an older lab because a later result is stuck in a note.
-- CMS816v5: 1 stay in the numerator would leave it if the meter file were part of the extract.
-
-## Worked rows
-
-**Blood pressure as text.** Patient P1061, Outpatient clinic 06. Two hypertension encounters fall in the identification window, so the patient is in the EHR denominator. The only 2026 reading has blank systolic and diastolic and the note "BP 132/78 today." Result: not controlled, no usable reading.
-
-**Later result trapped in a note.** Patient P2076. A discrete A1c of 9.4% on 1 March 2026 is the most recent usable result. A 1 November 2026 note says "A1c 7.1 at retail clinic" and stores no number. The over-9.0% rate uses 9.4%.
-
-**False low, three hospitals.** Encounters E01933, E01950, and E01967. Each has a capillary glucose of 28 mg/dL after insulin. Hospital A clears it with a repeat in the extract. Hospital B does not, because that repeat is only on the meter. Hospital C does not, because its repeat is at six minutes.
-
-## What this file cannot tell us
-
-It cannot estimate how often a real clinic loses a blood pressure to free text. Those rows were inserted. It has no time zone and no clock drift, so it cannot show a glucometer clock pushing a repeat past five minutes. It uses demonstration concepts in place of the HEDIS value sets and the CMS value set OIDs. A production extract would be scored with those code lists, and the counts would move.
+An internal rate that reused the problem list would answer a different question. It is not the rate a payer or CMS would compute from this extract.
